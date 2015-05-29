@@ -106,12 +106,19 @@ var TreeNode = React.createClass({
   },
 
   _getChildrenNode: function () {
+    var childrenNodeClasses = this._getRootCssClass() + "-children";
 
     var props = this.props;
-
-    if (this._isCollapsed()) return null;
-
     var children = props.children;
+
+    var collapseStateStyles = {};
+
+    if (this._isCollapsed()) {
+      if (this._isStateful()) {
+        collapseStateStyles = {height: '0', opacity:'0'};  
+      }
+      childrenNodeClasses += ' collapsed';
+    }
 
     if (this._isStateful()) {
       var state = this.state;
@@ -125,7 +132,7 @@ var TreeNode = React.createClass({
     } 
 
     return (
-      <div className={this._getRootCssClass() + "-children"}>
+      <div style={collapseStateStyles} className={childrenNodeClasses}>
           {children}
       </div>
     );
