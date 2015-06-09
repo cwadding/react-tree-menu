@@ -36,6 +36,7 @@ var TreeNode = React.createClass({
   },
 
   getDefaultProps: function () {
+
     return {
       stateful: false,
       collapsible: true,
@@ -54,35 +55,22 @@ var TreeNode = React.createClass({
       expandIconClass: "",
       collapseIconClass: ""
     }
-  },
-  
-  _getCollapseNode: function() {
-    var props = this.props,
-      collapseNode = null;
 
-    if (props.collapsible) {
-      var collapseClassName = this._getRootCssClass() + "-collapse-toggle ";
-      var collapseToggleHandler = this._handleCollapseChange;
-      if (!props.children || props.children.length === 0) {
-        collapseToggleHandler = noop;
-        collapseClassName += "collapse-spacer";
-      } else {
-        collapseClassName += (this._isCollapsed() ? props.expandIconClass : props.collapseIconClass);
-      }
-      collapseNode = <span onClick={collapseToggleHandler} className={collapseClassName}></span>
-    }
-    return collapseNode;
   },
 
   render : function () {
+    var cssPrefix = this._getRootCssClass();
+
     return (
-      <div className={this._getRootCssClass()}>
+      <div className={cssPrefix}>
         {this._getCollapseNode()}
         <span onClick={this._handleClick}>
           {this._getCheckboxNode()}
-          {this._getLabelNode()}
+          <label className={this._getLabelClassNames()}>{this._getLabelText()}</label>
         </span>
-        {this._getChildrenNode()}
+        <div className={cssPrefix + "-children"}>
+          {this._getChildrenNodes()}
+        </div>
       </div>
     );
   },
@@ -101,11 +89,33 @@ var TreeNode = React.createClass({
 
   },
 
+  hasChildren: function() {
+    return this.props.children && this.props.children.length > 0;
+  },
+
+  _getCollapseClassName: function(additionalClasses) {
+
+    var collapseClassName = this._getRootCssClass() + "-collapse-toggle ";
+    var collapseIcon = (this._isCollapsed() ? this.props.expandIconClass : this.props.collapseIconClass);
+    if (typeof additionalClasses !== 'undefined') collapseClassName += additionalClasses + " ";
+    collapseClassName += (this.hasChildren() ? collapseIcon : "collapse-spacer");
+    return collapseClassName;
+
+  },
+
+  _getCollapseNode: function(additionalClasses) {
+
+    if (!this.props.collapsible) return null;
+    var handleCollapseChange = this.hasChildren() ? this._handleCollapseChange : noop;
+    return <span onClick={ handleCollapseChange } className={ this._getCollapseClassName(additionalClasses)} />;
+
+  },
+
   _getRootCssClass: function () {
     return this.props.classNamePrefix + "-node";
   },
 
-  _getChildrenNode: function () {
+  _getChildrenNodes: function () {
 
     var props = this.props;
 
@@ -123,40 +133,37 @@ var TreeNode = React.createClass({
         })
       });
     } 
-
-    return (
-      <div className={this._getRootCssClass() + "-children"}>
-          {children}
-      </div>
-    );
+    return children;
 
   },
 
-  _getLabelNode: function () {
+  _getLabelText: function () {
 
-    var props = this.props,
-      labelClassName = props.classNamePrefix + "-node-label";
+    var displayLabel = this.props.label;
+    if (this.props.labelFilter) displayLabel = this.props.labelFilter(displayLabel);
+    return displayLabel;
 
-    if (this._isSelected()) {
-      labelClassName += " selected";
-    }
-
-    var displayLabel = props.label;
-
-    if (props.labelFilter) displayLabel = props.labelFilter(displayLabel);
-
-    return <label className={labelClassName}>{displayLabel}</label>;
   },
 
-  _getCheckboxNode: function () {
+  _getLabelClassNames: function () {
+
+    var labelClassName = this.props.classNamePrefix + "-node-label";
+    if (this._isSelected()) labelClassName += " selected";
+    return labelClassName;
+
+  },
+
+  _getCheckboxNode: function (additionalClasses) {
+
     var props = this.props;
     if (!props.checkbox) return null;
 
     return <input
-      className={props.classNamePrefix + "-node-checkbox"}
+      className={props.classNamePrefix + "-node-checkbox " + additionalClasses}
       type="checkbox"
       checked={this._isChecked()}
       onChange={noop}/>;
+
   },
 
   _isStateful: function () {
@@ -188,6 +195,7 @@ var TreeNode = React.createClass({
   },
 
   _handleClick: function () {
+
     if (this.props.checkbox) {
       return this._handleCheckChange();
     } else if (this.props.onSelectChange) {
@@ -199,6 +207,7 @@ var TreeNode = React.createClass({
   },
 
   _toggleNodeStateIfStateful: function (field) {
+
     if (this._isStateful()) {
       var newValue = !this.props[field];
       if (typeof this.state[field] !== "undefined") {
