@@ -93,20 +93,21 @@ var TreeNode = React.createClass({
     return this.props.children && this.props.children.length > 0;
   },
 
-  _getCollapseClassName: function() {
+  _getCollapseClassName: function(additionalClasses) {
 
     var collapseClassName = this._getRootCssClass() + "-collapse-toggle ";
     var collapseIcon = (this._isCollapsed() ? this.props.expandIconClass : this.props.collapseIconClass);
+    if (typeof additionalClasses !== 'undefined') collapseClassName += additionalClasses + " ";
     collapseClassName += (this.hasChildren() ? collapseIcon : "collapse-spacer");
     return collapseClassName;
 
   },
 
-  _getCollapseNode: function() {
+  _getCollapseNode: function(additionalClasses) {
 
     if (!this.props.collapsible) return null;
     var handleCollapseChange = this.hasChildren() ? this._handleCollapseChange : noop;
-    return <span onClick={ handleCollapseChange } className={ this._getCollapseClassName()} />;
+    return <span onClick={ handleCollapseChange } className={ this._getCollapseClassName(additionalClasses)} />;
 
   },
 
@@ -152,13 +153,13 @@ var TreeNode = React.createClass({
 
   },
 
-  _getCheckboxNode: function () {
+  _getCheckboxNode: function (additionalClasses) {
 
     var props = this.props;
     if (!props.checkbox) return null;
 
     return <input
-      className={props.classNamePrefix + "-node-checkbox"}
+      className={props.classNamePrefix + "-node-checkbox " + additionalClasses}
       type="checkbox"
       checked={this._isChecked()}
       onChange={noop}/>;
